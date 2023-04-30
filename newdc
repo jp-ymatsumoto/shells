@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# 引数が１つもなければ終了する
+if [ $# -eq 0 ]; then
+  echo "引数がありません"
+  exit 1
+fi
+
+# ヘルプを表示する
+if [ $1 = "--help" ]; then
+  echo "Usage: newdc [postgres|mariadb]"
+  exit 1
+fi
+
+touch compose.yml
+
+# case文で第一引数を分岐する
+case $1 in
+  postgres)
+  cat << EOF > compose.yml
+services:
+  db:
+    image: postgres:14.7
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+EOF
+    ;;
+  mariadb)
+  cat << EOF > compose.yml
+services:
+  db:
+    image: mariadb:10.7
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_DATABASE: testdb
+      MARIADB_USER: testuser
+      MARIADB_PASSWORD: testpass
+    volumes:
+      - ./db-data:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    depends_on:
+      - db
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: testuser
+      PMA_PASSWORD: testpass
+EOF
+    ;;
+  *)
+    echo "引数が不正です"
+    ;;
+esac
