@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Prettier をセットアップする
+prettier()
+{
+npm install --save-dev prettier eslint-config-prettier
+
+cat << 'EOF' > .prettierrc.json
+{
+  "useTabs": false,
+  "tabWidth": 2,
+  "singleQuote": true,
+  "semi": false,
+  "jsxSingleQuote": false,
+  "trailingComma": "all"
+}
+EOF
+
+cat << 'EOF' > .eslintrc.json
+{
+  "extends": ["next/core-web-vitals", "prettier"]
+}
+EOF
+}
+
+
+# Tailwind CSS をセットアップする
+tailwindcss()
+{
+echo $PWD
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+cat << 'EOF' > tailwind.config.js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+
+    // Or if using `src` directory:
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+EOF
+
+cat << 'EOF' > src/styles/globals.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+EOF
+
+}
+
+
+# 引数が１つもなければ終了する
+if [ $# -eq 0 ]; then
+  echo "引数がありません"
+  exit 1
+fi
+
+# ヘルプを表示する
+if [ $1 = "-h" ]; then
+  echo "Usage: newnjs [project-name]"
+  exit 1
+fi
+
+# Next.jsのプロジェクトを作成する
+npx create-next-app $1 --typescript --eslint --src-dir --import-alias "@/*"
+
+# プロジェクトのディレクトリに移動する
+cd $1
+
+# 必要ないファイルを削除する
+rm src/pages/api/hello.tsx
+
+prettier
+tailwindcss
